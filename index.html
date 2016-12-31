@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using TwitchJSONAPI</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous" />
+  <link rel="stylesheet" href="css/style.css" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+  <script type="text/javascript" src="js/script.js"></script>
+  <script type="text/javascript" src="js/jquery-3.1.1.js"></script>
+<style>
+
+
+</style>
+</head>
+
+<body>
+  <script>
+  //Run jquery
+  $(document).ready(function(){
+    var following = [];
+    var onlineUsers = [];
+    //freecodecamp stream info and status api call
+    var url = "https://wind-bow.gomix.me/twitch-api/streams/freecodecamp";
+    $.getJSON(url, function(data1){
+      if(data1.stream === null) {
+        $("#fccStatus").html("FreeCodeCamp is currently OFFLINE");
+      }
+      else {
+        $("#fccStatus").html("FreeCodeCamp is currently ONLINE");
+      }
+    });
+    //Using the api to get FCC's followers and push them to the 'following' array
+    var urlFollowers = "https://wind-bow.gomix.me/twitch-api/users/freecodecamp/follows/channels";
+    $.getJSON(urlFollowers, function(data2){
+      for (var i = 0; i < data2.follows.length; i++) {
+        var displayName = data2.follows[i].channel.display_name;
+        following.push(displayName);
+
+      }
+      //Pushing the tester channels
+      following.push('comster404');
+      following.push('brunofin');
+      following.push('ESL_SC2');
+      following.push('gallantgamerstv');
+      following.push('opsct');
+      following.push('frogpants');
+      following.push('freecodecamp');
+      following.push('hardlydifficult');
+
+      //Iterating through the 'following' array and getting nonexistent channels
+      for(var i = 0; i<following.length; i++) {
+        var url2 = "https://wind-bow.gomix.me/twitch-api/channels/" + following[i];
+        //$.getJSON(url2).done(function(data3){
+        $.getJSON(url2, function(data3){
+          var logo;
+          var name;
+          var status;
+          if (data3.error){
+            logo = "http://prancingthroughlife.com/wp-content/uploads/2014/03/na.jpg";
+            name = data3.error;
+            status = data3.message;
+            $("#followerInfo").prepend("<div class='row nonexistentUsers'>" + "<div class='col-md-4'>" +
+            "<img class='logo' src = '" + logo + "'>" + "</div>" + "<div class='col-md-4'>" +
+            name + "</div>" + "<div class='col-md-4'>" + status + "</div>" + "</div><br>");
+          }
+
+        });
+      }
+      //Getting channels that are currently streaming
+      for (var i=0; i<following.length; i++) {
+
+        var onlineURL = "https://wind-bow.gomix.me/twitch-api/streams/" + following[i];
+        $.getJSON(onlineURL).done(function(data4){
+          var logo;
+          var name;
+          var status;
+          var channelURL;
+          if (data4.stream != null) {
+            logo = data4.stream.channel.logo;
+            name = data4.stream.channel.display_name;
+            onlineUsers.push(name);
+            status = data4.stream.channel.status;
+            channelURL = data4.stream.channel.url;
+            $("#followerInfo").prepend("<a href='" + channelURL +
+            "' target='_blank'><div style='color:#A1E887'class='row onlineUsers'>" + "<div class='col-md-4'>" +
+            "<img class='logo' src = '" + logo + "'>" +
+            "</div>" + "<div class='col-md-4'>" +
+            name + "</div>" + "<div class='col-md-4'>" + status + "</div>" + "</div></a>");
+          }
+          });
+
+
+
+
+      }
+      //Getting channels that aren't currenly streaming
+      for (var i=0; i<following.length; i++) {
+        var userURL = "https://wind-bow.gomix.me/twitch-api/users/" + following[i];
+        $.getJSON(userURL, function(data5){
+          var logo;
+          var name;
+          var status;
+          var channelURL;
+          if (onlineUsers.indexOf(data5.display_name) === -1 & data5.display_name != undefined) {
+            if (data5.logo === null) {
+              logo = "http://prancingthroughlife.com/wp-content/uploads/2014/03/na.jpg";
+            }
+            else {
+              logo = data5.logo;
+            }
+            name = data5.display_name;
+            status = "OFFLINE";
+            channelURL = "https://www.twitch.tv/" + data5.name;
+            $("#followerInfo").prepend("<a href='" + channelURL +
+            "' target='_blank'><div style='color:#A1E887'class='row onlineUsers'>" + "<div class='col-md-4'>" +
+            "<img class='logo' src = '" + logo + "'>" +
+            "</div>" + "<div class='col-md-4'>" +
+            name + "</div>" + "<div class='col-md-4'>" + status + "</div>" + "</div></a>");
+          }
+
+
+        });
+
+      }
+
+    });
+    //searchbar code, key up
+    $("#search").keyup(function(){
+      var searchTerm = $(this).val();
+      //iterating through list of users to find a match
+      for (var i=0; i<following.length; i++){
+        var user = following[i].toLowerCase();
+        if (user.indexOf(searchTerm) == -1){
+          $("#" + user).css("display", "none");
+
+        }
+      }
+    });
+  });
+  </script>
+<div class="container">
+  <div id="header" class="text-center">
+    <h1>TwitchTV Streamers</h1>
+    <h2>Free Code Camp</h2>
+    <a id="link" href="https://www.twitch.tv/freecodecamp" target="_blank">
+    <h3 id="fccStatus"></h3>
+    </a>
+    </div>
+    <!--
+  <div id="searchBar" class="text-center">
+    <div class="row">
+      <div class="col-md-4 col-md-offset-3">
+          <form action="" class="search-form">
+              <div class="form-group has-feedback">
+              <label for="search" class="sr-only">Search</label>
+              <input type="text" class="form-control" name="search" id="search" placeholder="search">
+                <span class="glyphicon glyphicon-search form-control-feedback"></span>
+            </div>
+          </form>
+      </div>
+  </div>
+</div>-->
+<div id="results">
+  <div class="row">
+    <h3>
+  <div class="col-md-4">
+    Logo:
+  </div>
+  <div class="col-md-4">
+    Display Name:
+  </div>
+  <div class="col-md-4">
+    Status:
+  </div>
+</h3>
+  </div><br>
+<div id="followerInfo">
+</div>
+</div>
+</div>
+</body>
+</html>
